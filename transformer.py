@@ -9,10 +9,11 @@ class DataFrameSelecter(BaseEstimator, TransformerMixin):
         self.attribute_names = attribute_names
 
     def fit(self, X, y=None):
-        return self     # nothing to do here
+        return self
 
     def transform(self, X):
-        return X[self.attribute_names]
+        X_copy = X.copy()
+        return X_copy[self.attribute_names]
 
 
 class DiscountConverter(BaseEstimator, TransformerMixin):
@@ -20,7 +21,8 @@ class DiscountConverter(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        X = X.fillna(0.)
+        X_copy = X.copy()
+        X_copy = X_copy.fillna(0.)
 
         def convert_discount(x):
             try:
@@ -36,9 +38,9 @@ class DiscountConverter(BaseEstimator, TransformerMixin):
 
             return rate
 
-        X = X.applymap(convert_discount)
+        X_copy = X_copy.applymap(convert_discount)
 
-        return X
+        return X_copy.astype(float)
 
 
 class DateToWeekConverter(BaseEstimator, TransformerMixin):
@@ -55,10 +57,11 @@ class DateToWeekConverter(BaseEstimator, TransformerMixin):
 
             return x
 
-        X = X.apply(convert_date)
-        X.fillna(7, inplace=True)
+        X_copy = X.copy()
+        X_copy = X_copy.apply(convert_date)
+        X_copy.fillna(7, inplace=True)
 
-        return X
+        return X_copy
 
 
 class CategoryConverter(BaseEstimator, TransformerMixin):
@@ -69,7 +72,8 @@ class CategoryConverter(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        X = np.ceil(X / self.scale)
-        X.where(X > 1, 1, inplace=True)
+        X_copy = X.copy()
+        X_copy = np.ceil(X_copy / self.scale)
+        X_copy.where(X_copy > 1, 1, inplace=True)
 
-        return X
+        return X_copy
