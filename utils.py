@@ -38,7 +38,10 @@ def create_submission_file(model, pipeline, filename='submit.csv'):
     X['Date_received'] = pd.to_datetime(
         test['Date_received'], format='%Y%m%d'
     )
-    y_test_pred = model.predict_proba(pipeline.transform(X))
+    try:
+        y_test_pred = model.predict_proba(pipeline.transform(X))
+    except AttributeError:
+        y_test_pred = model.predict(pipeline.transform(X))
     test_copy = test[['User_id', 'Coupon_id', 'Date_received']].copy()
     test_copy['Probability'] = y_test_pred[:, 1]
     test_copy.to_csv(filename, index=False, header=False)
