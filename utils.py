@@ -65,13 +65,21 @@ def plot_roc_curve(ax, fpr, tpr):
     ax.set_ylabel('True Positive Rate')
 
 
-def evaluate_model(model, X_train, y_train, X_val, y_val, plot_train=True):
+def evaluate_model(model, X_train, y_train, X_val, y_val,
+                   model_type='sklearn_classifier',
+                   plot_train=True):
     try:
-        y_train_scores = model.decision_function(X_train)
-        y_val_scores = model.decision_function(X_val)
+        if model_type == 'sklearn_regressor':
+            y_train_scores = model.decision_function(X_train)
+            y_val_scores = model.decision_function(X_val)
+        if model_type == 'sklearn_classifier':
+            y_train_scores = model.predict_proba(X_train)[:, 1]
+            y_val_scores = model.predict_proba(X_val)[:, 1]
+        if model_type == 'keras':
+            y_train_scores = model.predict(X_train)
+            y_val_scores = model.predict(X_val)
     except AttributeError:
-        y_train_scores = model.predict_proba(X_train)[:, 1]
-        y_val_scores = model.predict_proba(X_val)[:, 1]
+        raise('Please check your model type.')
 
     precisions_train, recalls_train, thresholds_train = \
         precision_recall_curve(y_train, y_train_scores)
@@ -100,3 +108,31 @@ def evaluate_model(model, X_train, y_train, X_val, y_val, plot_train=True):
     )
     plot_roc_curve(ax2, fpr_val, tpr_val)
     ax2.text(0.5, 0.3, "roc = {}".format(round(roc_val, 3)))
+
+
+def plot_loss_and_accuracy(history):
+    # Plot training and validation loss and accuracy
+    history_dict = history.history
+    loss_values = history_dict['loss']
+    val_loss_values = history_dict['val_loss']
+    acc_values = history_dict['acc']
+    val_acc_values = history_dict['val_acc']
+
+    epochs = range(1, len(loss_values) + 1)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=False, figsize=(8, 4))
+    ax1.plot(epochs, loss_values, 'bo', label='Training loss')
+    ax1.plot(epochs, val_loss_values, 'r', label='Validation loss')
+    ax1.set_title('Training and Validation loss')
+    ax1.set_xlabel('Epochs')
+    ax1.set_ylabel('Loss')
+    ax1.legend()
+
+    ax2.plot(epochs, acc_values, 'bo', label='Training accuracy')
+    ax2.plot(epochs, val_acc_values, 'r', label='Validation accuracy')
+    ax2.set_title('Training and Validation accuracy')
+    ax2.set_xlabel('Epochs')
+    ax2.set_ylabel('accuracy')
+    ax2.legend()
+
+    plt.show()
